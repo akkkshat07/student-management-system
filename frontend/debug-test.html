@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        .test-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #00ff00;
+            color: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-screen">
+        <h1>🟢 GREEN SCREEN TEST</h1>
+        <p>This is plain HTML/CSS - no React involved</p>
+        <p>Current time: <span id="time"></span></p>
+        <button onclick="alert('Button works!')">Click me</button>
+    </div>
+
+    <script>
+        console.log('🟢 Plain HTML page loaded successfully');
+        alert('🟢 PLAIN HTML WORKING! This proves your browser and JavaScript work.');
+        
+        // Update time every second
+        function updateTime() {
+            document.getElementById('time').textContent = new Date().toLocaleTimeString();
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+        
+        console.log('✅ JavaScript is working perfectly');
+    </script>
+</body>
+</html>
