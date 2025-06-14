@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
@@ -12,7 +13,7 @@ const app = express();
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
     ? [
-        'https://your-netlify-site.netlify.app',
+        'https://your-railway-app.railway.app',
         'https://your-custom-domain.com'
       ]
     : ['http://localhost:3000', 'http://localhost:3001'],
@@ -21,6 +22,11 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
+// Serve static files from React build (for production)
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../frontend/build')));
+}
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
