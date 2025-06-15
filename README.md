@@ -72,7 +72,7 @@ A modern, comprehensive web application for managing student records with role-b
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/akkkshat07/student-management-system.git
    cd student-management-system
    ```
 
