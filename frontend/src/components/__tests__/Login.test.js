@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import Login from '../pages/Login';
 
-// Mock the API service
+
 jest.mock('../services/api', () => ({
   login: jest.fn(),
   isAuthenticated: jest.fn(() => false),
@@ -57,13 +57,13 @@ describe('Login Component', () => {
     const emailInput = screen.getByLabelText(/email address/i);
     const submitButton = screen.getByRole('button', { name: /sign in/i });
     
-    // Trigger validation error
+  
     fireEvent.click(submitButton);
     await waitFor(() => {
       expect(screen.getByText('Email is required')).toBeInTheDocument();
     });
     
-    // Start typing to clear error
+    
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
     
     await waitFor(() => {
