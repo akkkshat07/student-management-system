@@ -2,9 +2,10 @@
 
 A comprehensive web application for managing student records with role-based access control. The system features separate dashboards for administrators and students, built with React frontend and Node.js/Express backend.
 
-## 🚀 Features
+## Features
 
-- **Role-based Authentication**: Separate login for Admin and Students
+- **Student Registration**: Students can register and create their accounts
+- **Admin & Student Login**: Separate login for predefined Admin and Students
 - **Admin Dashboard**: 
   - View all students
   - Add new students
@@ -109,12 +110,14 @@ PORT=5000
 Run the admin initialization script:
 ```bash
 cd backend
-node initAdmin.js
+npm run init-admin
 ```
 
-This creates an admin user with:
+This creates the default admin user with:
 - **Email**: admin@example.com
 - **Password**: admin123
+
+⚠️ **Important**: Change the default password after first login!
 
 ## 🔐 Default Login Credentials
 
@@ -127,9 +130,9 @@ This creates an admin user with:
 
 ## 📱 Usage
 
-1. **Admin Login**: Access the admin dashboard to manage students and users
-2. **Student Login**: Students can view and update their personal information
-3. **Registration**: New users can sign up (role assignment may require admin approval)
+1. **Admin Login**: Access the admin dashboard to manage students and users (use default credentials)
+2. **Student Registration**: New students can sign up and create their accounts
+3. **Student Login**: Students can login and view/update their personal information
 
 ## 🌐 Deployment
 

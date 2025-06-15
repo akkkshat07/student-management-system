@@ -45,3 +45,32 @@ code {
 .success-message {
   @apply text-green-600 text-sm mt-1;
 }
+
+/* Custom animations for signup page */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* Custom glassmorphism effects */
+.backdrop-blur-xl {
+  backdrop-filter: blur(16px);
+}
+
+.backdrop-blur-sm {
+  backdrop-filter: blur(4px);
+}
+
+/* Enhanced focus states */
+.group:focus-within .group-focus-within\:text-indigo-600 {
+  color: rgb(79 70 229);
+}
+
+.group:focus-within .group-focus-within\:text-indigo-500 {
+  color: rgb(99 102 241);
+}

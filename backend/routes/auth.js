@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const router = express.Router();
 
-// Generate JWT token
+
 const generateToken = (userId, role) => {
   return jwt.sign(
     { userId, role },
@@ -12,13 +12,11 @@ const generateToken = (userId, role) => {
   );
 };
 
-// POST /signup - Register a new user
 router.post('/signup', async (req, res) => {
   try {
     console.log('📝 Signup request received:', req.body);
-    const { name, email, password, age, class: studentClass, role, adminCode } = req.body;
+    const { name, email, password, age, class: studentClass } = req.body;
 
-    // Validate required fields
     if (!name || !email || !password || !age || !studentClass) {
       console.log('❌ Validation failed: Missing required fields');
       return res.status(400).json({
@@ -27,30 +25,6 @@ router.post('/signup', async (req, res) => {
       });
     }
 
-    // Validate admin registration
-    if (role === 'admin') {
-      const validAdminCode = process.env.ADMIN_INVITE_CODE || 'ADMIN123SECURE';
-      
-      if (!adminCode) {
-        console.log('❌ Admin registration failed: No admin code provided');
-        return res.status(400).json({
-          success: false,
-          message: 'Admin invite code is required for admin registration'
-        });
-      }
-      
-      if (adminCode !== validAdminCode) {
-        console.log('❌ Admin registration failed: Invalid admin code');
-        return res.status(401).json({
-          success: false,
-          message: 'Invalid admin invite code'
-        });
-      }
-      
-      console.log('✅ Valid admin invite code provided');
-    }
-
-    // Validate age
     const ageNumber = parseInt(age);
     if (isNaN(ageNumber) || ageNumber < 1 || ageNumber > 100) {
       console.log('❌ Validation failed: Invalid age');
@@ -62,7 +36,6 @@ router.post('/signup', async (req, res) => {
 
     console.log('✅ Required fields validated');
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       console.log('❌ User already exists:', email);
@@ -74,14 +47,13 @@ router.post('/signup', async (req, res) => {
 
     console.log('✅ Email is unique');
 
-    // Create new user
     const user = new User({
       name,
       email,
       password,
       age: ageNumber,
       class: studentClass,
-      role: role || 'student' // Default to 'student' if role not provided
+      role: 'student' // Always set role to student for registrations
     });
 
     console.log('🔧 Creating user with data:', { 
@@ -89,13 +61,13 @@ router.post('/signup', async (req, res) => {
       email, 
       age: ageNumber, 
       class: studentClass, 
-      role: role || 'student' 
+      role: 'student' 
     });
 
     await user.save();
     console.log('✅ User saved successfully');
 
-    // Generate token
+    
     const token = generateToken(user._id, user.role);
 
     res.status(201).json({
@@ -118,7 +90,7 @@ router.post('/signup', async (req, res) => {
       code: error.code
     });
 
-    // Handle mongoose validation errors
+   
     if (error.name === 'ValidationError') {
       const validationErrors = Object.values(error.errors).map(err => err.message);
       console.log('🔍 Validation errors:', validationErrors);
@@ -129,7 +101,7 @@ router.post('/signup', async (req, res) => {
       });
     }
 
-    // Handle duplicate key error (email uniqueness)
+    
     if (error.code === 11000) {
       return res.status(400).json({
         success: false,
@@ -144,12 +116,10 @@ router.post('/signup', async (req, res) => {
   }
 });
 
-// POST /login - Authenticate user
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validate required fields
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -157,7 +127,6 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Find user by email
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({
@@ -166,7 +135,6 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Compare password
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
       return res.status(401).json({
@@ -175,7 +143,6 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Generate token
     const token = generateToken(user._id, user.role);
 
     res.json({
