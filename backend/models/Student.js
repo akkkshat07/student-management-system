@@ -35,7 +35,7 @@ const studentSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for better query performance
+
 studentSchema.index({ createdBy: 1 });
 studentSchema.index({ name: 1 });
 
