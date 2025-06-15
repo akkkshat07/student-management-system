@@ -1,11 +1,7 @@
 {
   "name": "student-management-system",
   "version": "1.0.0",
-  "description": "Student Management System with MongoDB Atlas",
-  "main": "index.html",
-  "scripts": {
-    "build": "echo 'Build complete'"
-  },
+  "description": "Student Management System with React and MongoDB Atlas",
   "dependencies": {
     "mongodb": "^6.0.0"
   },

@@ -1,18 +1,6 @@
 const { MongoClient, ObjectId } = require('mongodb');
 
 const uri = process.env.MONGODB_URI;
-let cachedClient = null;
-
-async function connectToDatabase() {
-  if (cachedClient) {
-    return cachedClient;
-  }
-  
-  const client = new MongoClient(uri);
-  await client.connect();
-  cachedClient = client;
-  return client;
-}
 
 const headers = {
   'Access-Control-Allow-Origin': '*',
@@ -21,13 +9,22 @@ const headers = {
 };
 
 exports.handler = async (event, context) => {
-  // Handle CORS preflight
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers };
   }
 
+  if (!uri) {
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ error: 'MongoDB URI not configured' })
+    };
+  }
+
+  const client = new MongoClient(uri);
+
   try {
-    const client = await connectToDatabase();
+    await client.connect();
     const db = client.db('studentManagement');
     const collection = db.collection('students');
 
@@ -57,7 +54,7 @@ exports.handler = async (event, context) => {
         const updateData = JSON.parse(event.body);
         await collection.updateOne(
           { _id: new ObjectId(studentId) },
-          { $set: updateData }
+          { $set: { ...updateData, updatedAt: new Date() } }
         );
         return {
           statusCode: 200,
@@ -82,10 +79,13 @@ exports.handler = async (event, context) => {
         };
     }
   } catch (error) {
+    console.error('Database error:', error);
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({ error: error.message })
     };
+  } finally {
+    await client.close();
   }
 };
