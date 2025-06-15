@@ -5,11 +5,10 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Get user data from localStorage
     const userData = localStorage.getItem('user');
     
     if (!userData) {
-      // If no user data, redirect to login
+   
       console.log('No user data found, redirecting to login');
       navigate('/login');
       return;
@@ -20,7 +19,6 @@ const Dashboard = () => {
       console.log('User data:', user);
       console.log('User role:', user.role);
 
-      // Redirect based on user role
       if (user.role === 'admin') {
         console.log('Redirecting admin to admin dashboard');
         navigate('/admin-dashboard');
@@ -37,7 +35,6 @@ const Dashboard = () => {
     }
   }, [navigate]);
 
-  // Show loading state while redirecting
   return (
     <div style={{ 
       display: 'flex', 
