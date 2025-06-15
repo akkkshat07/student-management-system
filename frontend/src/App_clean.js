@@ -8,6 +8,7 @@ import StudentDashboard from './pages/StudentDashboard';
 import AddStudent from './pages/AddStudent';
 import EditStudent from './pages/EditStudent';
 import ProtectedRoute from './components/ProtectedRoute';
+import Header from './components/Header';
 import ErrorBoundary from './components/ErrorBoundary';
 import './App.css';
 

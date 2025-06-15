@@ -20,13 +20,34 @@ app.use((req, res, next) => {
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
+    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/student_management';
+    console.log('Attempting to connect to MongoDB...');
+    console.log('MongoDB URI:', mongoUri.replace(/\/\/.*@/, '//***:***@')); // Hide credentials in logs
+    
+    const conn = await mongoose.connect(mongoUri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+      socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
     });
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    
+    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
+    console.log(`📊 Database: ${conn.connection.name}`);
   } catch (error) {
-    console.error('Database connection error:', error);
+    console.error('❌ Database connection error:', error.message);
+    
+    if (error.message.includes('ENOTFOUND') || error.message.includes('ECONNREFUSED')) {
+      console.log('\n🔧 Database Connection Troubleshooting:');
+      console.log('1. For local MongoDB: Make sure MongoDB is installed and running');
+      console.log('   - Install: https://docs.mongodb.com/manual/installation/');
+      console.log('   - Start: mongod --dbpath ./data');
+      console.log('2. For MongoDB Atlas: Check your connection string and credentials');
+      console.log('3. For development: Consider using MongoDB Memory Server');
+      console.log('\n💡 The server will continue running but database operations will fail.\n');
+      return;
+    }
+    
+    console.error('Exiting due to database connection failure...');
     process.exit(1);
   }
 };
