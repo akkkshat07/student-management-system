@@ -9,24 +9,20 @@ const AdminDashboard = () => {
   const [error, setError] = useState('');
   const [deleteLoading, setDeleteLoading] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-    const navigate = useNavigate();
-  
+  const navigate = useNavigate();
+
   const fetchStudents = useCallback(async () => {
     try {
       setIsLoading(true);
-      setError('');      const response = await getStudents();
-      console.log('🔍 Frontend - API Response:', response);
+      setError('');
+      const response = await getStudents();
       if (response.success) {
-        console.log('🔍 Frontend - Students data:', response.data);
-        console.log('🔍 Frontend - Student count:', response.data?.length);
-        console.log('🔍 Frontend - Student names:', response.data?.map(s => s.name));
         setStudents(response.data || []);
       } else {
         setError(response.message || 'Failed to fetch students');
       }
     } catch (err) {
       setError(err.message || 'Failed to fetch students');
-      console.error('Error fetching students:', err);
     } finally {
       setIsLoading(false);
     }
@@ -34,32 +30,26 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const user = getUser();
-    // Check if user is admin
     if (!user || user.role !== 'admin') {
       navigate('/login');
       return;
     }
     fetchStudents();
   }, [navigate, fetchStudents]);
+
   const handleDeleteStudent = async (studentId, source) => {
     const studentType = source === 'registration' ? 'registered student' : 'manually added student';
     if (!window.confirm(`Are you sure you want to delete this ${studentType}?`)) {
       return;
     }
-
     try {
       setDeleteLoading(studentId);
-      
-      // Use different API endpoints based on source
       let response;
       if (source === 'registration') {
-        // For registered users, we'll need a different endpoint
         response = await deleteUser(studentId);
       } else {
-        // For manual students
         response = await deleteStudent(studentId);
       }
-      
       if (response.success) {
         setStudents(students.filter(student => student._id !== studentId));
       } else {
@@ -89,10 +79,8 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          {/* Header Section */}
           <div className="md:flex md:items-center md:justify-between mb-6">
             <div className="flex-1 min-w-0">
               <h1 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
@@ -101,7 +89,8 @@ const AdminDashboard = () => {
               <p className="mt-1 text-sm text-gray-500">
                 Manage students and system administration
               </p>
-            </div>            <div className="mt-4 flex md:mt-0 md:ml-4">
+            </div>
+            <div className="mt-4 flex md:mt-0 md:ml-4">
               <button
                 onClick={() => navigate('/add-student')}
                 className="ml-3 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -110,8 +99,6 @@ const AdminDashboard = () => {
               </button>
             </div>
           </div>
-
-          {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="p-5">
@@ -134,7 +121,6 @@ const AdminDashboard = () => {
                 </div>
               </div>
             </div>
-
             <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="p-5">
                 <div className="flex items-center">
@@ -144,7 +130,8 @@ const AdminDashboard = () => {
                     </div>
                   </div>
                   <div className="ml-5 w-0 flex-1">
-                    <dl>                      <dt className="text-sm font-medium text-gray-500 truncate">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">
                         Registered Students
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
@@ -153,8 +140,8 @@ const AdminDashboard = () => {
                     </dl>
                   </div>
                 </div>
-              </div>            </div>
-
+              </div>
+            </div>
             <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="p-5">
                 <div className="flex items-center">
@@ -176,7 +163,6 @@ const AdminDashboard = () => {
                 </div>
               </div>
             </div>
-
             <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="p-5">
                 <div className="flex items-center">
@@ -199,15 +185,11 @@ const AdminDashboard = () => {
               </div>
             </div>
           </div>
-
-          {/* Error Display */}
           {error && (
             <div className="rounded-md bg-red-50 p-4 mb-6">
               <div className="text-sm text-red-700">{error}</div>
             </div>
           )}
-
-          {/* Students Table */}
           <div className="bg-white shadow overflow-hidden sm:rounded-md">
             <div className="px-4 py-5 sm:p-6">
               <div className="flex items-center justify-between mb-4">
@@ -223,7 +205,8 @@ const AdminDashboard = () => {
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-              </div>              {filteredStudents.length === 0 ? (
+              </div>
+              {filteredStudents.length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-gray-500">No students found.</p>
                   <button
@@ -233,7 +216,8 @@ const AdminDashboard = () => {
                     Add First Student
                   </button>
                 </div>
-              ) : (                <div className="overflow-x-auto">
+              ) : (
+                <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
@@ -280,7 +264,8 @@ const AdminDashboard = () => {
                             }`}>
                               {student.source === 'registration' ? 'Registered' : 'Manual'}
                             </span>
-                          </td>                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div className="flex space-x-2">
                               <button
                                 onClick={() => navigate(`/edit-student/${student._id}?source=${student.source}`)}
