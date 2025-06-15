@@ -28,30 +28,48 @@ function App() {
       console.log('🔄 Loading students...');
       
       const response = await fetch(`${API_BASE}/students`);
-      if (!response.ok) throw new Error('Failed to load students');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       
       const data = await response.json();
       setStudents(data);
       console.log('✅ Students loaded:', data.length);
     } catch (error) {
       console.error('❌ Error loading students:', error);
-      showNotification('Error loading students. Using offline mode.', 'error');
+      showNotification('Using offline mode - data stored locally', 'error');
       
-      // Fallback to localStorage for development
+      // Fallback to localStorage
       const localData = localStorage.getItem('students');
       if (localData) {
-        const parsedData = JSON.parse(localData);
-        setStudents(parsedData);
-        console.log('📦 Loaded from localStorage:', parsedData.length);
+        try {
+          const parsedData = JSON.parse(localData);
+          setStudents(parsedData);
+          console.log('📦 Loaded from localStorage:', parsedData.length);
+        } catch (parseError) {
+          console.error('Error parsing localStorage data:', parseError);
+          setStudents([]);
+        }
+      } else {
+        setStudents([]);
       }
     } finally {
       setLoading(false);
     }
   };
 
+  const saveToLocalStorage = (studentsData) => {
+    try {
+      localStorage.setItem('students', JSON.stringify(studentsData));
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+    }
+  };
+
   const saveStudent = async (studentData) => {
     try {
       setLoading(true);
+      
       const response = await fetch(`${API_BASE}/students`, {
         method: 'POST',
         headers: {
@@ -61,22 +79,27 @@ function App() {
       });
       
       if (!response.ok) {
-        // Fallback to localStorage if API fails
-        const newStudent = { ...studentData, id: Date.now().toString() };
-        const existingStudents = JSON.parse(localStorage.getItem('students') || '[]');
-        const updatedStudents = [...existingStudents, newStudent];
-        localStorage.setItem('students', JSON.stringify(updatedStudents));
-        setStudents(updatedStudents);
-        showNotification('Student saved locally!', 'success');
-      } else {
-        showNotification('Student saved successfully!', 'success');
-        await loadStudents();
+        throw new Error('Network request failed');
       }
       
+      showNotification('Student saved successfully!', 'success');
+      await loadStudents();
       clearForm();
     } catch (error) {
       console.error('Error saving student:', error);
-      showNotification('Error saving student', 'error');
+      
+      // Fallback to localStorage
+      const newStudent = { 
+        ...studentData, 
+        id: Date.now().toString(),
+        _id: Date.now().toString(),
+        createdAt: new Date().toISOString()
+      };
+      const updatedStudents = [...students, newStudent];
+      setStudents(updatedStudents);
+      saveToLocalStorage(updatedStudents);
+      showNotification('Student saved locally!', 'success');
+      clearForm();
     } finally {
       setLoading(false);
     }
@@ -85,6 +108,7 @@ function App() {
   const updateStudent = async (id, studentData) => {
     try {
       setLoading(true);
+      
       const response = await fetch(`${API_BASE}/students?id=${id}`, {
         method: 'PUT',
         headers: {
@@ -94,23 +118,25 @@ function App() {
       });
       
       if (!response.ok) {
-        // Fallback to localStorage
-        const existingStudents = JSON.parse(localStorage.getItem('students') || '[]');
-        const updatedStudents = existingStudents.map(student => 
-          (student.id === id || student._id === id) ? { ...student, ...studentData } : student
-        );
-        localStorage.setItem('students', JSON.stringify(updatedStudents));
-        setStudents(updatedStudents);
-        showNotification('Student updated locally!', 'success');
-      } else {
-        showNotification('Student updated successfully!', 'success');
-        await loadStudents();
+        throw new Error('Network request failed');
       }
       
+      showNotification('Student updated successfully!', 'success');
+      await loadStudents();
       clearForm();
     } catch (error) {
       console.error('Error updating student:', error);
-      showNotification('Error updating student', 'error');
+      
+      // Fallback to localStorage
+      const updatedStudents = students.map(student => 
+        (student.id === id || student._id === id) 
+          ? { ...student, ...studentData, updatedAt: new Date().toISOString() } 
+          : student
+      );
+      setStudents(updatedStudents);
+      saveToLocalStorage(updatedStudents);
+      showNotification('Student updated locally!', 'success');
+      clearForm();
     } finally {
       setLoading(false);
     }
@@ -121,26 +147,27 @@ function App() {
     
     try {
       setLoading(true);
+      
       const response = await fetch(`${API_BASE}/students?id=${id}`, {
         method: 'DELETE'
       });
       
       if (!response.ok) {
-        // Fallback to localStorage
-        const existingStudents = JSON.parse(localStorage.getItem('students') || '[]');
-        const updatedStudents = existingStudents.filter(student => 
-          student.id !== id && student._id !== id
-        );
-        localStorage.setItem('students', JSON.stringify(updatedStudents));
-        setStudents(updatedStudents);
-        showNotification('Student deleted locally!', 'success');
-      } else {
-        showNotification('Student deleted successfully!', 'success');
-        await loadStudents();
+        throw new Error('Network request failed');
       }
+      
+      showNotification('Student deleted successfully!', 'success');
+      await loadStudents();
     } catch (error) {
       console.error('Error deleting student:', error);
-      showNotification('Error deleting student', 'error');
+      
+      // Fallback to localStorage
+      const updatedStudents = students.filter(student => 
+        student.id !== id && student._id !== id
+      );
+      setStudents(updatedStudents);
+      saveToLocalStorage(updatedStudents);
+      showNotification('Student deleted locally!', 'success');
     } finally {
       setLoading(false);
     }
@@ -148,6 +175,12 @@ function App() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Basic validation
+    if (!formData.name || !formData.email) {
+      showNotification('Please fill in required fields', 'error');
+      return;
+    }
     
     if (editingId) {
       updateStudent(editingId, formData);
@@ -186,10 +219,9 @@ function App() {
   };
 
   const filteredStudents = students.filter(student =>
-    (student.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (student.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (student.course || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (student.studentId || '').toLowerCase().includes(searchTerm.toLowerCase())
+    Object.values(student).some(value =>
+      value && value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+    )
   );
 
   const totalStudents = students.length;
@@ -210,7 +242,7 @@ function App() {
       )}
 
       <div className="container">
-        <h1>Student Management System</h1>
+        <h1>🎓 Student Management System</h1>
         
         {/* Dashboard */}
         <div className="dashboard-stats">
@@ -228,7 +260,7 @@ function App() {
         <div className="search-section">
           <input
             type="text"
-            placeholder="Search students..."
+            placeholder="🔍 Search students..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
@@ -237,73 +269,88 @@ function App() {
 
         {/* Form */}
         <div className="form-section">
-          <h2>{editingId ? 'Edit Student' : 'Add New Student'}</h2>
+          <h2>{editingId ? '✏️ Edit Student' : '➕ Add New Student'}</h2>
           <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label>Student ID:</label>
-              <input
-                type="text"
-                value={formData.studentId}
-                onChange={(e) => setFormData({...formData, studentId: e.target.value})}
-                required
-              />
+            <div className="form-grid">
+              <div className="form-group">
+                <label>Student ID:</label>
+                <input
+                  type="text"
+                  value={formData.studentId}
+                  onChange={(e) => setFormData({...formData, studentId: e.target.value})}
+                  placeholder="Enter student ID"
+                />
+              </div>
+              
+              <div className="form-group">
+                <label>Full Name: *</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  placeholder="Enter full name"
+                  required
+                />
+              </div>
+              
+              <div className="form-group">
+                <label>Email: *</label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  placeholder="Enter email address"
+                  required
+                />
+              </div>
+              
+              <div className="form-group">
+                <label>Course:</label>
+                <input
+                  type="text"
+                  value={formData.course}
+                  onChange={(e) => setFormData({...formData, course: e.target.value})}
+                  placeholder="Enter course name"
+                />
+              </div>
+              
+              <div className="form-group">
+                <label>Phone Number:</label>
+                <input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  placeholder="Enter phone number"
+                />
+              </div>
             </div>
             
-            <div className="form-group">
-              <label>Full Name:</label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                required
-              />
+            <div className="form-buttons">
+              <button type="submit">
+                {editingId ? '🔄 Update Student' : '➕ Add Student'}
+              </button>
+              <button type="button" onClick={clearForm}>
+                🗑️ Clear Form
+              </button>
             </div>
-            
-            <div className="form-group">
-              <label>Email:</label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
-                required
-              />
-            </div>
-            
-            <div className="form-group">
-              <label>Course:</label>
-              <input
-                type="text"
-                value={formData.course}
-                onChange={(e) => setFormData({...formData, course: e.target.value})}
-                required
-              />
-            </div>
-            
-            <div className="form-group">
-              <label>Phone Number:</label>
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                required
-              />
-            </div>
-            
-            <button type="submit">
-              {editingId ? 'Update Student' : 'Add Student'}
-            </button>
-            <button type="button" onClick={clearForm}>
-              Clear Form
-            </button>
           </form>
         </div>
 
         {/* Table */}
         <div className="table-section">
-          <h2>Student Records ({filteredStudents.length})</h2>
+          <h2>📊 Student Records ({filteredStudents.length})</h2>
           <div className="table-container">
             {filteredStudents.length === 0 ? (
-              <p className="no-data">No students found. Add your first student above!</p>
+              <div className="no-data">
+                {students.length === 0 ? (
+                  <div>
+                    <h3>🚀 Welcome to Student Management System!</h3>
+                    <p>No students added yet. Use the form above to add your first student.</p>
+                  </div>
+                ) : (
+                  <p>No students match your search criteria.</p>
+                )}
+              </div>
             ) : (
               <table>
                 <thead>
@@ -318,24 +365,26 @@ function App() {
                 </thead>
                 <tbody>
                   {filteredStudents.map(student => (
-                    <tr key={student._id || student.id}>
-                      <td>{student.studentId || 'N/A'}</td>
-                      <td>{student.name || 'N/A'}</td>
-                      <td>{student.email || 'N/A'}</td>
-                      <td>{student.course || 'N/A'}</td>
-                      <td>{student.phone || 'N/A'}</td>
+                    <tr key={student._id || student.id || Math.random()}>
+                      <td>{student.studentId || '-'}</td>
+                      <td>{student.name || '-'}</td>
+                      <td>{student.email || '-'}</td>
+                      <td>{student.course || '-'}</td>
+                      <td>{student.phone || '-'}</td>
                       <td>
                         <button 
                           onClick={() => handleEdit(student)}
                           className="btn-edit"
+                          title="Edit student"
                         >
-                          Edit
+                          ✏️ Edit
                         </button>
                         <button 
                           onClick={() => deleteStudent(student._id || student.id)}
                           className="btn-delete"
+                          title="Delete student"
                         >
-                          Delete
+                          🗑️ Delete
                         </button>
                       </td>
                     </tr>
