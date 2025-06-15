@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-// Authentication middleware
+
 const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.header('Authorization');
@@ -13,7 +13,7 @@ const authenticate = async (req, res, next) => {
       });
     }
 
-    // Extract token from "Bearer <token>" format
+  
     const token = authHeader.startsWith('Bearer ') 
       ? authHeader.slice(7) 
       : authHeader;
@@ -25,10 +25,10 @@ const authenticate = async (req, res, next) => {
       });
     }
 
-    // Verify token
+  
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    // Find user and attach to request
+    
     const user = await User.findById(decoded.userId);
     if (!user) {
       return res.status(401).json({ 
@@ -67,7 +67,7 @@ const authenticate = async (req, res, next) => {
   }
 };
 
-// Authorization middleware factory
+
 const authorize = (...roles) => {
   return (req, res, next) => {
     if (!req.user) {
@@ -88,10 +88,9 @@ const authorize = (...roles) => {
   };
 };
 
-// Admin only middleware
 const adminOnly = authorize('admin');
 
-// Admin or user middleware
+
 const authenticatedUser = authorize('admin', 'user');
 
 module.exports = {
