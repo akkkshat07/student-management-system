@@ -25,79 +25,43 @@ function App() {
   const loadStudents = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Loading students...');
-      
       const response = await fetch(`${API_BASE}/students`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error('API not available');
       
       const data = await response.json();
       setStudents(data);
-      console.log('✅ Students loaded:', data.length);
     } catch (error) {
-      console.error('❌ Error loading students:', error);
-      showNotification('Using offline mode - data stored locally', 'error');
-      
-      // Fallback to localStorage
+      console.error('Using localStorage fallback');
       const localData = localStorage.getItem('students');
       if (localData) {
-        try {
-          const parsedData = JSON.parse(localData);
-          setStudents(parsedData);
-          console.log('📦 Loaded from localStorage:', parsedData.length);
-        } catch (parseError) {
-          console.error('Error parsing localStorage data:', parseError);
-          setStudents([]);
-        }
-      } else {
-        setStudents([]);
+        setStudents(JSON.parse(localData));
       }
+      showNotification('Using offline mode', 'error');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const saveToLocalStorage = (studentsData) => {
-    try {
-      localStorage.setItem('students', JSON.stringify(studentsData));
-    } catch (error) {
-      console.error('Error saving to localStorage:', error);
     }
   };
 
   const saveStudent = async (studentData) => {
     try {
       setLoading(true);
-      
       const response = await fetch(`${API_BASE}/students`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(studentData)
       });
       
-      if (!response.ok) {
-        throw new Error('Network request failed');
-      }
+      if (!response.ok) throw new Error('API not available');
       
-      showNotification('Student saved successfully!', 'success');
+      showNotification('Student saved!', 'success');
       await loadStudents();
       clearForm();
     } catch (error) {
-      console.error('Error saving student:', error);
-      
       // Fallback to localStorage
-      const newStudent = { 
-        ...studentData, 
-        id: Date.now().toString(),
-        _id: Date.now().toString(),
-        createdAt: new Date().toISOString()
-      };
+      const newStudent = { ...studentData, id: Date.now().toString() };
       const updatedStudents = [...students, newStudent];
       setStudents(updatedStudents);
-      saveToLocalStorage(updatedStudents);
+      localStorage.setItem('students', JSON.stringify(updatedStudents));
       showNotification('Student saved locally!', 'success');
       clearForm();
     } finally {
@@ -105,68 +69,18 @@ function App() {
     }
   };
 
-  const updateStudent = async (id, studentData) => {
-    try {
-      setLoading(true);
-      
-      const response = await fetch(`${API_BASE}/students?id=${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(studentData)
-      });
-      
-      if (!response.ok) {
-        throw new Error('Network request failed');
-      }
-      
-      showNotification('Student updated successfully!', 'success');
-      await loadStudents();
-      clearForm();
-    } catch (error) {
-      console.error('Error updating student:', error);
-      
-      // Fallback to localStorage
-      const updatedStudents = students.map(student => 
-        (student.id === id || student._id === id) 
-          ? { ...student, ...studentData, updatedAt: new Date().toISOString() } 
-          : student
-      );
-      setStudents(updatedStudents);
-      saveToLocalStorage(updatedStudents);
-      showNotification('Student updated locally!', 'success');
-      clearForm();
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const deleteStudent = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this student?')) return;
+    if (!window.confirm('Delete this student?')) return;
     
     try {
       setLoading(true);
-      
-      const response = await fetch(`${API_BASE}/students?id=${id}`, {
-        method: 'DELETE'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Network request failed');
-      }
-      
-      showNotification('Student deleted successfully!', 'success');
+      await fetch(`${API_BASE}/students?id=${id}`, { method: 'DELETE' });
       await loadStudents();
+      showNotification('Student deleted!', 'success');
     } catch (error) {
-      console.error('Error deleting student:', error);
-      
-      // Fallback to localStorage
-      const updatedStudents = students.filter(student => 
-        student.id !== id && student._id !== id
-      );
+      const updatedStudents = students.filter(s => s.id !== id && s._id !== id);
       setStudents(updatedStudents);
-      saveToLocalStorage(updatedStudents);
+      localStorage.setItem('students', JSON.stringify(updatedStudents));
       showNotification('Student deleted locally!', 'success');
     } finally {
       setLoading(false);
@@ -175,70 +89,156 @@ function App() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    // Basic validation
     if (!formData.name || !formData.email) {
-      showNotification('Please fill in required fields', 'error');
+      showNotification('Name and email required!', 'error');
       return;
     }
-    
-    if (editingId) {
-      updateStudent(editingId, formData);
-    } else {
-      saveStudent(formData);
-    }
-  };
-
-  const handleEdit = (student) => {
-    setFormData({
-      studentId: student.studentId || '',
-      name: student.name || '',
-      email: student.email || '',
-      course: student.course || '',
-      phone: student.phone || ''
-    });
-    setEditingId(student._id || student.id);
+    saveStudent(formData);
   };
 
   const clearForm = () => {
-    setFormData({
-      studentId: '',
-      name: '',
-      email: '',
-      course: '',
-      phone: ''
-    });
+    setFormData({ studentId: '', name: '', email: '', course: '', phone: '' });
     setEditingId(null);
   };
 
   const showNotification = (message, type) => {
     setNotification({ message, type });
-    setTimeout(() => {
-      setNotification({ message: '', type: '' });
-    }, 3000);
+    setTimeout(() => setNotification({ message: '', type: '' }), 3000);
   };
 
   const filteredStudents = students.filter(student =>
     Object.values(student).some(value =>
-      value && value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+      value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
     )
   );
 
-  const totalStudents = students.length;
-  const totalCourses = [...new Set(students.map(s => s.course).filter(Boolean))].length;
-
   return (
     <div className="App">
-      {loading && (
-        <div className="loader">
-          <div className="spinner"></div>
-        </div>
-      )}
-
+      {loading && <div className="loader"><div className="spinner"></div></div>}
+      
       {notification.message && (
         <div className={`notification ${notification.type}`}>
           {notification.message}
         </div>
+      )}
+
+      <div className="container">
+        <h1>🎓 Student Management System</h1>
+        
+        <div className="dashboard-stats">
+          <div className="stat-card">
+            <h3>Total Students</h3>
+            <p>{students.length}</p>
+          </div>
+          <div className="stat-card">
+            <h3>Total Courses</h3>
+            <p>{[...new Set(students.map(s => s.course).filter(Boolean))].length}</p>
+          </div>
+        </div>
+
+        <div className="search-section">
+          <input
+            type="text"
+            placeholder="🔍 Search students..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input"
+          />
+        </div>
+
+        <div className="form-section">
+          <h2>➕ Add New Student</h2>
+          <form onSubmit={handleSubmit}>
+            <div className="form-grid">
+              <input
+                type="text"
+                placeholder="Student ID"
+                value={formData.studentId}
+                onChange={(e) => setFormData({...formData, studentId: e.target.value})}
+              />
+              <input
+                type="text"
+                placeholder="Full Name *"
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                required
+              />
+              <input
+                type="email"
+                placeholder="Email *"
+                value={formData.email}
+                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                required
+              />
+              <input
+                type="text"
+                placeholder="Course"
+                value={formData.course}
+                onChange={(e) => setFormData({...formData, course: e.target.value})}
+              />
+              <input
+                type="tel"
+                placeholder="Phone"
+                value={formData.phone}
+                onChange={(e) => setFormData({...formData, phone: e.target.value})}
+              />
+            </div>
+            <div className="form-buttons">
+              <button type="submit">➕ Add Student</button>
+              <button type="button" onClick={clearForm}>🗑️ Clear</button>
+            </div>
+          </form>
+        </div>
+
+        <div className="table-section">
+          <h2>📊 Students ({filteredStudents.length})</h2>
+          {filteredStudents.length === 0 ? (
+            <div className="no-data">
+              <h3>🚀 No students yet!</h3>
+              <p>Add your first student using the form above.</p>
+            </div>
+          ) : (
+            <div className="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Course</th>
+                    <th>Phone</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredStudents.map(student => (
+                    <tr key={student._id || student.id}>
+                      <td>{student.studentId || '-'}</td>
+                      <td>{student.name}</td>
+                      <td>{student.email}</td>
+                      <td>{student.course || '-'}</td>
+                      <td>{student.phone || '-'}</td>
+                      <td>
+                        <button 
+                          onClick={() => deleteStudent(student._id || student.id)}
+                          className="btn-delete"
+                        >
+                          🗑️ Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default App;
       )}
 
       <div className="container">

@@ -10,17 +10,6 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  background-attachment: fixed;
-}
-
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
-}
-
-* {
-  box-sizing: border-box;
 }
 
 #root {
@@ -101,6 +90,17 @@ code {
 }
 
 .backdrop-blur-sm {
+  backdrop-filter: blur(4px);
+}
+
+/* Enhanced focus states */
+.group:focus-within .group-focus-within\:text-indigo-600 {
+  color: rgb(79 70 229);
+}
+
+.group:focus-within .group-focus-within\:text-indigo-500 {
+  color: rgb(99 102 241);
+}
   backdrop-filter: blur(4px);
 }
 
