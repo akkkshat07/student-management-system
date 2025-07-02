@@ -1,7 +1,6 @@
 import axios from 'axios';
 
 // Base URL for API calls
-// In production on Vercel, API will be at same domain under /api
 const API_BASE_URL = process.env.REACT_APP_API_URL || 
   (process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:5000/api');
 
@@ -34,7 +33,7 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid
+    
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
@@ -48,7 +47,7 @@ export const login = async (data) => {
   try {
     const response = await api.post('/auth/login', data);
     if (response.data.success) {
-      // Store token and user data
+     
       localStorage.setItem('token', response.data.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.data));
     }
@@ -140,7 +139,7 @@ export const editUser = async (id, data) => {
   }
 };
 
-// Utility functions
+
 export const isAuthenticated = () => {
   const token = localStorage.getItem('token');
   return !!token;

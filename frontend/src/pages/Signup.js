@@ -28,25 +28,25 @@ const Signup = () => {  const [formData, setFormData] = useState({
       const response = await signup({ ...formData, role: 'student' });
       
       if (response.success) {
-        // Store token and user data
+       
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data));
         
-        // Redirect to dashboard
+       
         navigate('/dashboard');
       }    } catch (err) {
       console.error('❌ Signup error:', err);
       console.error('Error response:', err.response?.data);
       
-      // Extract error message from the response
+    
       let errorMessage = 'Registration failed';
       
       if (err.response?.data) {
         if (err.response.data.errors && Array.isArray(err.response.data.errors)) {
-          // Handle validation errors array
+    
           errorMessage = err.response.data.errors.join(', ');
         } else if (err.response.data.message) {
-          // Handle single error message
+        
           errorMessage = err.response.data.message;
         }
       } else if (err.message) {

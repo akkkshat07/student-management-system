@@ -72,7 +72,7 @@ A modern, comprehensive web application for managing student records with role-b
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/akkkshat07/student-management-system.git
    cd student-management-system
    ```
 
@@ -143,25 +143,6 @@ This creates the default admin user with:
 2. **Student Registration**: New students can sign up and create their accounts
 3. **Student Login**: Students can login and view/update their personal information
 
-## 🌐 Deployment
-
-### Frontend (Netlify)
-1. Build the frontend: `npm run build` in the frontend directory
-2. Deploy the `build` folder to Netlify
-3. Configure environment variables for production API URL
-
-### Backend (Heroku/Railway/Other)
-1. Set up environment variables on your hosting platform
-2. Ensure MongoDB connection is configured for production
-3. Deploy the backend directory
-
-## 🧪 Testing
-
-Run tests for the frontend:
-```bash
-cd frontend
-npm test
-```
 
 ## 🤝 Contributing
 
@@ -171,9 +152,6 @@ npm test
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 📞 Support
 

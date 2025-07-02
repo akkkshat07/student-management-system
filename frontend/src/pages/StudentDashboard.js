@@ -18,7 +18,7 @@ const StudentDashboard = () => {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
       
-      // Verify user is a student
+     
       if (parsedUser.role !== 'student') {
         navigate('/login');
         return;
@@ -31,7 +31,7 @@ const StudentDashboard = () => {
     }
   }, [navigate]);
 
-  // Update time every second
+
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -70,7 +70,7 @@ const StudentDashboard = () => {
     return 'Good Evening';
   };
 
-  // Mock data for student activities (in real app, this would come from API)
+
   const upcomingAssignments = [
     { id: 1, title: 'Mathematics Assignment', dueDate: '2025-06-20', subject: 'Mathematics' },
     { id: 2, title: 'Science Project', dueDate: '2025-06-22', subject: 'Science' },

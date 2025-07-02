@@ -15,33 +15,32 @@ const Login = () => {
   const location = useLocation();
   const from = location.state?.from?.pathname || '/dashboard';
 
-  // Validate email format
+  
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  // Handle input changes
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
-    // Clear errors when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
         [name]: ''
       }));
     }
-    // Clear API error
+   
     if (apiError) {
       setApiError('');
     }
   };
 
-  // Validate form
+
   const validateForm = () => {
     const newErrors = {};
 
@@ -59,7 +58,7 @@ const Login = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle form submission
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -74,7 +73,7 @@ const Login = () => {
       const response = await login(formData);
       
       if (response.success) {
-        // Redirect to the page user was trying to access or dashboard
+      
         navigate(from, { replace: true });
       } else {
         setApiError(response.message || 'Login failed');
